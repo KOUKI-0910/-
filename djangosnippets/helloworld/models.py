@@ -12,6 +12,7 @@ class Helloworld(models.Model):
                                    on_delete=models.CASCADE)
     created_at = models.DateTimeField('投稿日', auto_now_add=True)
     updated_at = models.DateTimeField('更新日', auto_now=True)
+    is_resolved = models.BooleanField(default=False, verbose_name='解決済み')
 
     def __str__(self):
         return self.title

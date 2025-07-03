@@ -16,12 +16,28 @@
 
 {% block main %}
 <div class="snippet-box">
-    <h2>{{ snippet.title }} by {{ snippet.created_by.username }}</h2>
+    <h2>
+        {{ snippet.title }}by {{ snippet.created_by.username }}
+        {% if snippet.is_resolved %}
+            <span class="badge bg-success">解決済み</span>
+        {% else %}
+            <span class="badge bg-danger">未解決</span>
+        {% endif %}
+    </h2>
 
     <div class="snippet-date">
         投稿日： {{ snippet.created_at|date:'DATETIME_FORMAT' }}
         {% if user.is_authenticated and snippet.created_by_id == user.id %}
         <a class="btn-edit" href="{% url 'snippet_edit' snippet.id %}">編集</a>
+
+        <form action="{% url 'toggle_resolved' snippet.id %}" method="post" style="display: inline-block; margin-left: 10px;">
+            {% csrf_token %}
+            {% if snippet.is_resolved %}
+                <button type="submit" class="btn btn-sm btn-warning">未解決に戻す</button>
+            {% else %}
+                <button type="submit" class="btn btn-sm btn-success">解決済みにする</button>
+            {% endif %}
+        </form>
         {% endif %}
     </div>
 

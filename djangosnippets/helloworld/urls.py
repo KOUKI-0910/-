@@ -20,4 +20,5 @@ urlpatterns = [
                                        form_class=UserCreationForm, success_url='/'), name='signup'),
     path('<int:snippet_id>/sighting/new/', views.sighting_new, name='sighting_new'),
     path('sighting/<int:pk>/', views.sighting_detail, name='sighting_detail'),
+path('<int:snippet_id>/resolve/', views.toggle_resolved, name='toggle_resolved'),
 ]

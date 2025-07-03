@@ -1,39 +1,41 @@
 from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from helloworld.models import Helloworld,Shop,Sighting
 from helloworld.forms import SnippetForm,ShopForm,SightingForm
 
 # Create your views here.
 def top(request):
-    # ▼▼▼ 全ての投稿リストを先に準備する ▼▼▼
     all_snippets = Helloworld.objects.order_by('-created_at')
 
     query = request.GET.get('q')
     if query:
-        # 検索クエリがある場合、テーブル表示用に投稿を絞り込む
         filtered_snippets = all_snippets.filter(created_by__username__icontains=query)
     else:
-        # 検索がない場合は、全件リストをそのまま使う
         filtered_snippets = all_snippets
+
 
     shops = Shop.objects.all()
 
-    total_count = all_snippets.count() + shops.count()
+    paginator = Paginator(filtered_snippets, 10)  # 1ページに10件表示
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
+    total_count = all_snippets.count() + shops.count()
     context = {
-        'all_snippets': all_snippets,  # 地図表示用の全件リスト
-        'filtered_snippets': filtered_snippets,  # テーブル表示用の絞り込み後リスト
+        'all_snippets': all_snippets,
         'shops': shops,
         'total_count': total_count,
+        'page_obj': page_obj,  # 絞り込み済みリストの代わりにページオブジェクトを渡す
+        'query': query,  # 検索クエリをテンプレートに渡す
     }
     return render(request, 'snippets/top.html', context)
 
 
-@login_required  # このデコレータのある機能はログインが必要
+@login_required
 def snippet_new(request):
     if request.method == 'POST':
-        # ↓↓↓↓ request.FILES を追加します ↓↓↓↓
         form = SnippetForm(request.POST, request.FILES)
         if form.is_valid():
             snippet = form.save(commit=False)
@@ -62,9 +64,9 @@ def snippet_edit(request, snippet_id):
 
 def snippet_detail(request, snippet_id):
     snippet = get_object_or_404(Helloworld, pk=snippet_id)
-    # 関連する目撃情報をデータベースから取得する
+
     sightings = snippet.sightings.all().order_by('-sighting_datetime')
-    # テンプレートにsnippetとsightingsの両方を渡す
+
     return render(request, 'snippets/snippet_detail.html', {
         'snippet': snippet,
         'sightings': sightings,
@@ -77,7 +79,7 @@ def shop_new(request):
             shop = form.save(commit=False)
             shop.created_by = request.user
             shop.save()
-            return redirect('top')  # 投稿後、地図ページへ
+            return redirect('top')
     else:
         form = ShopForm()
     return render(request, 'snippets/snippet_new_map.html', {'form': form})
@@ -90,7 +92,6 @@ def snippet_edit(request, snippet_id):
         return HttpResponseForbidden('このスニペットの編集は許可されていません．')
 
     if request.method == 'POST':
-        # ▼▼▼ request.FILES を追加するのを忘れないようにしましょう ▼▼▼
         form = SnippetForm(request.POST, request.FILES, instance=snippet)
         if form.is_valid():
             form.save()
@@ -98,7 +99,6 @@ def snippet_edit(request, snippet_id):
     else:
         form = SnippetForm(instance=snippet)
 
-    # ▼▼▼ contextに 'snippet': snippet を追加 ▼▼▼
     context = {'form': form, 'snippet': snippet}
     return render(request, 'snippets/snippet_edit.html', context)
 
@@ -112,7 +112,6 @@ def sighting_new(request, snippet_id):
             sighting.theft_report = snippet
             sighting.created_by = request.user
             sighting.save()
-            # 投稿後は詳細ページにリダイレクト
             return redirect('snippet_detail', snippet_id=snippet.pk)
     else:
         form = SightingForm()
@@ -124,5 +123,14 @@ def sighting_new(request, snippet_id):
 def sighting_detail(request, pk):
     sighting = get_object_or_404(Sighting, pk=pk)
     return render(request, 'snippets/sighting_detail.html', {'sighting': sighting})
+
+@login_required
+def toggle_resolved(request, snippet_id):
+    if request.method == 'POST':
+        snippet = get_object_or_404(Helloworld, pk=snippet_id)
+        if snippet.created_by == request.user:
+            snippet.is_resolved = not snippet.is_resolved
+            snippet.save()
+    return redirect('snippet_detail', snippet_id=snippet_id)
 
 

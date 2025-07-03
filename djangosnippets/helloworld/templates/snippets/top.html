@@ -2,7 +2,11 @@
 
 {% block extraheader %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 <style>
     #map {
         height: 400px;
@@ -33,24 +37,49 @@
 
 <div id="map"></div>
 <script>
-    var map = L.map('map').setView([35.681236, 139.767125], 13); // 初期表示位置（東京）
+    var map = L.map('map').setView([35.681236, 139.767125], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-    // 自転車撤去場所のピンを表示
+    // ▼▼▼ ここからJavaScriptを大きく変更 ▼▼▼
+
+    // 1. マーカークラスターグループを作成
+    var markers = L.markerClusterGroup();
+
+    // 2. カスタムアイコンを定義
+    var theftIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34],
+    });
+    var resolvedIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34],
+    });
+    var shopIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34],
+    });
+
+    // 3. 自転車撤去場所のピンをクラスターに追加
     {% for shop in shops %}
-        var shop_marker = L.marker([{{ shop.latitude }}, {{ shop.longitude }}]).addTo(map);
-        shop_marker.bindPopup("<b>{{ shop.name }}</b><br>撤去場所<br>{{ shop.address }}");
+        var shopMarker = L.marker([{{ shop.latitude }}, {{ shop.longitude }}], {icon: shopIcon})
+                          .bindPopup("<b>{{ shop.name }}</b><br>撤去場所<br>{{ shop.address }}");
+        markers.addLayer(shopMarker);
     {% endfor %}
 
-    // 投稿のピンは all_snippets (全件) を使って表示
+    // 4. 盗難情報のピンをクラスターに追加
     {% for snippet in all_snippets %}
         {% if snippet.latitude and snippet.longitude %}
-            var snippet_marker = L.marker([{{ snippet.latitude }}, {{ snippet.longitude }}]).addTo(map);
-            snippet_marker.bindPopup("<b><a href='{% url 'snippet_detail' snippet.id %}'>{{ snippet.title }}</a></b>");
+            var iconToUse = {% if snippet.is_resolved %}resolvedIcon{% else %}theftIcon{% endif %};
+            var snippetMarker = L.marker([{{ snippet.latitude }}, {{ snippet.longitude }}], {icon: iconToUse})
+                                 .bindPopup("<b><a href='{% url 'snippet_detail' snippet.id %}'>{{ snippet.title }}</a></b><br>{% if snippet.is_resolved %}解決済み{% else %}未解決{% endif %}");
+            markers.addLayer(snippetMarker);
         {% endif %}
     {% endfor %}
+
+    // 5. クラスターグループを地図に追加
+    map.addLayer(markers);
 
     // 検索ボタンクリック時の処理
     document.getElementById('search-button').addEventListener('click', function() {
@@ -88,25 +117,50 @@
     <button class="btn btn-primary" type="submit">検索</button>
 </form>
 
-{% if filtered_snippets %}
+{% if page_obj %}
 <table class="table">
     <thead>
     <tr>
         <th>投稿者</th>
         <th>投稿日</th>
         <th>タイトル</th>
+        <th>ステータス</th>
     </tr>
     </thead>
     <tbody>
-    {% for snippet in filtered_snippets %}
+    {% for snippet in page_obj %}
     <tr>
         <th>{{ snippet.created_by.username }}</th>
         <th>{{ snippet.created_at }}</th>
         <th><a href="{% url 'snippet_detail' snippet.id %}">{{ snippet.title }}</a></th>
+        <th>
+            {% if snippet.is_resolved %}
+                <span class="badge bg-success">解決済み</span>
+            {% else %}
+                <span class="badge bg-danger">未解決</span>
+            {% endif %}
+        </th>
     </tr>
     {% endfor %}
     </tbody>
 </table>
+
+<nav aria-label="Page navigation">
+  <ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}
+      <li class="page-item"><a class="page-link" href="?page=1&q={{ query|default:'' }}">&laquo; 最初</a></li>
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ query|default:'' }}">前へ</a></li>
+    {% endif %}
+
+    <li class="page-item disabled"><span class="page-link">ページ {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+
+    {% if page_obj.has_next %}
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ query|default:'' }}">次へ</a></li>
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&q={{ query|default:'' }}">最後 &raquo;</a></li>
+    {% endif %}
+  </ul>
+</nav>
+
 {% else %}
 <p>該当する投稿はありません．</p>
 {% endif %}
