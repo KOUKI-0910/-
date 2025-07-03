@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block extraheader %}
+{% if snippet.latitude and snippet.longitude %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<style>
+  #map {
+    height: 300px;
+    width: 100%;
+    margin-top: 10px;
+  }
+</style>
+{% endif %}
+{% endblock %}
+
+{% block main %}
+<div class="snippet-box">
+    <h2>{{ snippet.title }} by {{ snippet.created_by.username }}</h2>
+
+    <div class="snippet-date">
+        投稿日： {{ snippet.created_at|date:'DATETIME_FORMAT' }}
+        {% if user.is_authenticated and snippet.created_by_id == user.id %}
+        <a class="btn-edit" href="{% url 'snippet_edit' snippet.id %}">編集</a>
+        {% endif %}
+    </div>
+
+    <div class="section-label">自転車の写真</div>
+    {% if snippet.problem_image %}
+        <img src="{{ snippet.problem_image.url }}" alt="問題点の写真" style="max-width: 100%; height: auto; margin-top: 10px;">
+    {% else %}
+        <p>写真はありません。</p>
+    {% endif %}
+
+    <div class="section-label">説明</div>
+    <p>{{ snippet.description }}</p>
+
+    <div class="section-label">場所</div>
+    {% if snippet.latitude and snippet.longitude %}
+    <div id="map"></div>
+    <script>
+      var map = L.map('map').setView([{{ snippet.latitude }}, {{ snippet.longitude }}], 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      var marker = L.marker([{{ snippet.latitude }}, {{ snippet.longitude }}]).addTo(map);
+      marker.bindPopup("<b>{{ snippet.title }}</b>");
+    </script>
+
+    <div class="section-label">目撃情報</div>
+    <a href="{% url 'sighting_new' snippet.id %}" class="btn btn-info my-2">この自転車の目撃情報を投稿する</a>
+
+    <ul class="list-group">
+    {% for sighting in sightings %}
+        <li class="list-group-item">
+            <a href="{% url 'sighting_detail' sighting.id %}">
+                <strong>{{ sighting.sighting_datetime|date:"Y/m/d H:i" }}</strong>
+                - {{ sighting.sighting_location }} (報告者: {{ sighting.created_by.username }})
+            </a>
+        </li>
+    {% empty %}
+        <li class="list-group-item">まだ目撃情報はありません。</li>
+    {% endfor %}
+    </ul>
+    {% endif %}
+</div>
+{% endblock %}

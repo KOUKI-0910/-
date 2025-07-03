@@ -1,0 +1,158 @@
+/* === 背景モザイク効果（前回から変更なし） === */
+body {
+    font-family: 'Yu Gothic', 'Hiragino Kaku Gothic ProN', sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #333;  /* デフォルト文字色を暗めに */
+    background-image: url("../images/leaf.jpg");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    position: relative;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    background-color: rgba(255, 255, 255, 0.15);  /* 薄く背景を明るく */
+    z-index: -1;
+}
+
+/* === welcomeセクション（透明背景・読みやすい色）=== */
+.welcome {
+    padding: 3rem 2rem;
+    margin: 2rem auto;
+    max-width: 800px;
+    text-align: center;
+    background: none; /* 背景・ボーダーなし */
+    color: #1e3d2f;  /* 🌿 ダークグリーン系の読みやすい色 */
+    font-weight: 500;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.6);  /* 若干の影で視認性アップ */
+}
+
+/* === 投稿者・投稿日：変更なし === */
+/* テーブルはそのまま（投稿者や投稿日の保持） */
+.table {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-collapse: collapse;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 64, 0, 0.1);
+    width: 90%;
+    margin: 2rem auto;
+}
+
+.table th {
+    background-color: #e1f5e1;
+    color: #1f3f1f;
+    padding: 10px 12px;
+    font-size: 0.95rem;
+}
+
+.table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #cceccc;
+    font-size: 0.95rem;
+}
+
+.table tbody tr:hover {
+    background-color: #f0fff0;
+}
+
+.table a {
+    color: #227744;
+    text-decoration: none;
+}
+
+.table a:hover {
+    text-decoration: underline;
+}
+
+.snippet-box {
+    background: none;  /* 枠も影もなし */
+    padding: 2rem 1.5rem;
+    margin: 2rem auto;
+    max-width: 800px;
+    color: #1e3d2f;  /* テーブルと統一した深緑 */
+    font-size: 1rem;
+    line-height: 1.8;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.4);
+}
+
+.snippet-box h2 {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+    color: #1f3f1f;
+}
+
+.snippet-date a {
+    color: #1e3d2f;
+    text-decoration: underline dotted;
+    font-size: 0.85rem;
+}
+
+.snippet-box .snippet-date {
+    font-size: 0.85rem;
+    color: #444;
+    margin-bottom: 1.5rem;
+}
+
+.snippet-box p {
+    background-color: rgba(255, 255, 255, 0.5);  /* うっすら背景 */
+    padding: 1rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid #227744;
+}
+
+.section-label {
+    font-weight: bold;
+    color: #1f3f1f;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.btn-edit {
+    background-color: #4CAF50; /* 明るめの緑 */
+    color: white;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    text-decoration: none;
+    font-weight: bold;
+    display: inline-block;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 6px rgba(76, 175, 80, 0.2);
+    margin-left: 1rem;
+}
+
+.btn-edit:hover {
+    background-color: #43a047; /* ホバー時：濃い緑 */
+    box-shadow: 0 4px 10px rgba(67, 160, 71, 0.3);
+}
+
+
+/* === 投稿ボタン（前回のまま）=== */
+.btn-primary {
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    font-weight: bold;
+    padding: 0.7rem 1.4rem;
+    border-radius: 25px;
+    box-shadow: 0 4px 10px rgba(76, 175, 80, 0.4);
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #43a047;
+    box-shadow: 0 6px 14px rgba(67, 160, 71, 0.5);
+}

@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+
+{% block extraheader %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<style>
+  #map {
+    height: 400px;
+    width: 100%;
+    margin-top: 20px;
+  }
+  .search-container {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+  }
+</style>
+{% endblock extraheader %}
+
+{% block main %}
+<h2>内容の編集</h2>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    {% bootstrap_field form.title %}
+    {% bootstrap_field form.problem_image layout='horizontal' %}
+    {% bootstrap_field form.description layout='horizontal' %}
+
+    {{ form.latitude }}
+    {{ form.longitude }}
+
+    <div class="search-container">
+      <input type="text" id="address-search" class="form-control" placeholder="住所や施設名で検索">
+      <button type="button" id="search-button" class="btn btn-secondary">検索</button>
+    </div>
+    <p>場所を変更する場合は、地図上でクリック、または検索してください。</p>
+    <div id="map"></div>
+
+    <div class="mt-3 d-grid">
+        {% bootstrap_button button_type='submit' content='編集内容を保存' button_class='btn-primary' %}
+    </div>
+</form>
+
+<script>
+    // ▼▼▼ 投稿の既存の緯度経度を初期値として設定 ▼▼▼
+    // データがない場合は東京駅をデフォルトにする
+    const initialLat = {{ snippet.latitude|default_if_none:35.681236 }};
+    const initialLng = {{ snippet.longitude|default_if_none:139.767125 }};
+    const initialZoom = {% if snippet.latitude %}16{% else %}13{% endif %};
+
+    var map = L.map('map').setView([initialLat, initialLng], initialZoom);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    var marker;
+    var latInput = document.getElementById("id_latitude");
+    var lngInput = document.getElementById("id_longitude");
+
+    // ▼▼▼ 既存の緯度経度があれば、初期マーカーを表示 ▼▼▼
+    if ({{ snippet.latitude|yesno:'true,false' }}) {
+        marker = L.marker([initialLat, initialLng]).addTo(map);
+    }
+
+    // マーカーとフォームを更新する関数
+    function updateMarkerAndForm(lat, lng) {
+        if (marker) {
+            map.removeLayer(marker);
+        }
+        marker = L.marker([lat, lng]).addTo(map);
+        latInput.value = lat;
+        lngInput.value = lng;
+    }
+
+    // 地図クリック時の処理
+    map.on('click', function(e) {
+        var lat = e.latlng.lat;
+        var lng = e.latlng.lng;
+        updateMarkerAndForm(lat, lng);
+    });
+
+    // 検索ボタンクリック時の処理
+    document.getElementById('search-button').addEventListener('click', function() {
+        var query = document.getElementById('address-search').value;
+        if (!query) return;
+
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    var lat = data[0].lat;
+                    var lon = data[0].lon;
+                    map.setView([lat, lon], 16);
+                    updateMarkerAndForm(lat, lon);
+                } else {
+                    alert('住所が見つかりませんでした。');
+                }
+            })
+            .catch(error => {
+                console.error('検索に失敗しました:', error);
+                alert('検索中にエラーが発生しました。');
+            });
+    });
+</script>
+{% endblock main %}

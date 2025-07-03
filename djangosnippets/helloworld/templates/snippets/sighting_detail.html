@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block main %}
+<h2>目撃情報の詳細</h2>
+  <p><strong>関連投稿：</strong> <a href="{% url 'snippet_detail' sighting.theft_report.id %}">{{ sighting.theft_report.title }}</a></p>
+  <p><strong>目撃場所：</strong> {{ sighting.sighting_location }}</p>
+  <p><strong>目撃日時：</strong> {{ sighting.sighting_datetime|date:"Y年m月d日 H:i" }}</p>
+  <p><strong>報告者：</strong> {{ sighting.created_by.username }}</p>
+
+{% if sighting.sighting_image %}
+  <div>
+    <img src="{{ sighting.sighting_image.url }}" alt="目撃写真" style="max-width: 100%; height: auto; border-radius: 8px;">
+  </div>
+{% endif %}
+
+<a href="{% url 'snippet_detail' sighting.theft_report.id %}" class="btn btn-secondary mt-3">投稿詳細に戻る</a>
+
+{% endblock %}

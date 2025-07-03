@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block extraheader %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<style>
+    #map {
+        height: 400px;
+        width: 100%;
+        margin-top: 20px;
+    }
+    .search-container {
+      margin-top: 15px;
+      margin-bottom: 10px;
+      display: flex;
+      gap: 10px;
+    }
+</style>
+{% endblock extraheader %}
+
+{% block main %}
+<div class="welcome">
+    <h1 class="title">自転車盗難サイト</h1>
+    <p class="subtitle">投稿はこちら</p>
+    <a class="btn btn-primary" href="{% url 'snippet_new' %}">投稿</a>
+</div>
+
+
+<div class="search-container">
+    <input type="text" id="address-search" class="form-control" placeholder="住所や施設名で検索">
+    <button type="button" id="search-button" class="btn btn-secondary">検索</button>
+</div>
+
+<div id="map"></div>
+<script>
+    var map = L.map('map').setView([35.681236, 139.767125], 13); // 初期表示位置（東京）
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // 自転車撤去場所のピンを表示
+    {% for shop in shops %}
+        var shop_marker = L.marker([{{ shop.latitude }}, {{ shop.longitude }}]).addTo(map);
+        shop_marker.bindPopup("<b>{{ shop.name }}</b><br>撤去場所<br>{{ shop.address }}");
+    {% endfor %}
+
+    // 投稿のピンは all_snippets (全件) を使って表示
+    {% for snippet in all_snippets %}
+        {% if snippet.latitude and snippet.longitude %}
+            var snippet_marker = L.marker([{{ snippet.latitude }}, {{ snippet.longitude }}]).addTo(map);
+            snippet_marker.bindPopup("<b><a href='{% url 'snippet_detail' snippet.id %}'>{{ snippet.title }}</a></b>");
+        {% endif %}
+    {% endfor %}
+
+    // 検索ボタンクリック時の処理
+    document.getElementById('search-button').addEventListener('click', function() {
+        var query = document.getElementById('address-search').value;
+        if (!query) return;
+
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data && data.length > 0) {
+              var lat = data[0].lat;
+              var lon = data[0].lon;
+              map.setView([lat, lon], 16); // 地図を検索結果に移動
+            } else {
+              alert('場所が見つかりませんでした。');
+            }
+          })
+          .catch(error => {
+            console.error('検索に失敗しました:', error);
+            alert('検索中にエラーが発生しました。');
+          });
+    });
+</script>
+
+<div class="text-center my-3">
+    <p class="h5">現在の盗難状況：{{ total_count }}件</p>
+</div>
+
+<a href="{% url 'shop_new' %}" class="btn btn-success">自転車撤去場所を追加</a>
+
+<hr>
+<h4>投稿の検索</h4>
+<form method="get" action="{% url 'top' %}" class="search-container">
+    <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="投稿者名で検索...">
+    <button class="btn btn-primary" type="submit">検索</button>
+</form>
+
+{% if filtered_snippets %}
+<table class="table">
+    <thead>
+    <tr>
+        <th>投稿者</th>
+        <th>投稿日</th>
+        <th>タイトル</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for snippet in filtered_snippets %}
+    <tr>
+        <th>{{ snippet.created_by.username }}</th>
+        <th>{{ snippet.created_at }}</th>
+        <th><a href="{% url 'snippet_detail' snippet.id %}">{{ snippet.title }}</a></th>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>該当する投稿はありません．</p>
+{% endif %}
+
+{% endblock main %}

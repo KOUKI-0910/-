@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+
+{% block main %}
+<h2>「{{ snippet.title }}」への目撃情報投稿</h2>
+
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  {% bootstrap_form form %}
+  <button type="submit" class="btn btn-primary">目撃情報を投稿する</button>
+</form>
+{% endblock %}
