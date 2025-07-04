@@ -44,8 +44,6 @@
 </form>
 
 <script>
-    // ▼▼▼ 投稿の既存の緯度経度を初期値として設定 ▼▼▼
-    // データがない場合は東京駅をデフォルトにする
     const initialLat = {{ snippet.latitude|default_if_none:35.681236 }};
     const initialLng = {{ snippet.longitude|default_if_none:139.767125 }};
     const initialZoom = {% if snippet.latitude %}16{% else %}13{% endif %};
@@ -59,12 +57,10 @@
     var latInput = document.getElementById("id_latitude");
     var lngInput = document.getElementById("id_longitude");
 
-    // ▼▼▼ 既存の緯度経度があれば、初期マーカーを表示 ▼▼▼
     if ({{ snippet.latitude|yesno:'true,false' }}) {
         marker = L.marker([initialLat, initialLng]).addTo(map);
     }
 
-    // マーカーとフォームを更新する関数
     function updateMarkerAndForm(lat, lng) {
         if (marker) {
             map.removeLayer(marker);
@@ -74,14 +70,12 @@
         lngInput.value = lng;
     }
 
-    // 地図クリック時の処理
     map.on('click', function(e) {
         var lat = e.latlng.lat;
         var lng = e.latlng.lng;
         updateMarkerAndForm(lat, lng);
     });
 
-    // 検索ボタンクリック時の処理
     document.getElementById('search-button').addEventListener('click', function() {
         var query = document.getElementById('address-search').value;
         if (!query) return;

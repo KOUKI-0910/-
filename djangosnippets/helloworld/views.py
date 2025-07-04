@@ -18,7 +18,7 @@ def top(request):
 
     shops = Shop.objects.all()
 
-    paginator = Paginator(filtered_snippets, 10)  # 1ページに10件表示
+    paginator = Paginator(filtered_snippets, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -27,8 +27,8 @@ def top(request):
         'all_snippets': all_snippets,
         'shops': shops,
         'total_count': total_count,
-        'page_obj': page_obj,  # 絞り込み済みリストの代わりにページオブジェクトを渡す
-        'query': query,  # 検索クエリをテンプレートに渡す
+        'page_obj': page_obj,
+        'query': query,
     }
     return render(request, 'snippets/top.html', context)
 
@@ -47,7 +47,7 @@ def snippet_new(request):
     return render(request, 'snippets/snippet_new.html', {'form': form})
 
 
-@login_required  # このデコレータのある機能はログインが必要
+@login_required
 def snippet_edit(request, snippet_id):
     snippet = get_object_or_404(Helloworld, pk=snippet_id)
     if snippet.created_by_id != request.user.id:

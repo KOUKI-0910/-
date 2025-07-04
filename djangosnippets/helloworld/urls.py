@@ -12,7 +12,7 @@ urlpatterns = [
     path('new/', views.snippet_new, name='snippet_new'),
     path('<int:snippet_id>/', views.snippet_detail, name='snippet_detail'),
     path('<int:snippet_id>/edit/', views.snippet_edit, name='snippet_edit'),
-    path('shop/new/', views.shop_new, name='shop_new'),  # ★ これを追加
+    path('shop/new/', views.shop_new, name='shop_new'),
     path('login/', LoginView.as_view(redirect_authenticated_user=True,
                                      template_name='snippets/login.html'), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),

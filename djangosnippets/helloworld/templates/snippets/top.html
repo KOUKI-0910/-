@@ -42,12 +42,8 @@
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-    // ▼▼▼ ここからJavaScriptを大きく変更 ▼▼▼
-
-    // 1. マーカークラスターグループを作成
     var markers = L.markerClusterGroup();
 
-    // 2. カスタムアイコンを定義
     var theftIcon = L.icon({
         iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
         iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34],
@@ -61,14 +57,12 @@
         iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34],
     });
 
-    // 3. 自転車撤去場所のピンをクラスターに追加
     {% for shop in shops %}
         var shopMarker = L.marker([{{ shop.latitude }}, {{ shop.longitude }}], {icon: shopIcon})
                           .bindPopup("<b>{{ shop.name }}</b><br>撤去場所<br>{{ shop.address }}");
         markers.addLayer(shopMarker);
     {% endfor %}
 
-    // 4. 盗難情報のピンをクラスターに追加
     {% for snippet in all_snippets %}
         {% if snippet.latitude and snippet.longitude %}
             var iconToUse = {% if snippet.is_resolved %}resolvedIcon{% else %}theftIcon{% endif %};
@@ -78,10 +72,8 @@
         {% endif %}
     {% endfor %}
 
-    // 5. クラスターグループを地図に追加
     map.addLayer(markers);
 
-    // 検索ボタンクリック時の処理
     document.getElementById('search-button').addEventListener('click', function() {
         var query = document.getElementById('address-search').value;
         if (!query) return;
@@ -92,7 +84,7 @@
             if (data && data.length > 0) {
               var lat = data[0].lat;
               var lon = data[0].lon;
-              map.setView([lat, lon], 16); // 地図を検索結果に移動
+              map.setView([lat, lon], 16);
             } else {
               alert('場所が見つかりませんでした。');
             }

@@ -54,7 +54,6 @@
   var latInput = document.getElementById("id_latitude");
   var lngInput = document.getElementById("id_longitude");
 
-  // マーカーとフォームを更新する関数
   function updateMarkerAndForm(lat, lng) {
     if (marker) {
       map.removeLayer(marker);
@@ -64,14 +63,12 @@
     lngInput.value = lng;
   }
 
-  // 地図クリック時の処理
   map.on('click', function(e) {
     var lat = e.latlng.lat;
     var lng = e.latlng.lng;
     updateMarkerAndForm(lat, lng);
   });
 
-  // 検索ボタンクリック時の処理
   document.getElementById('search-button').addEventListener('click', function() {
     var query = document.getElementById('address-search').value;
     if (!query) return;
@@ -82,8 +79,8 @@
         if (data && data.length > 0) {
           var lat = data[0].lat;
           var lon = data[0].lon;
-          map.setView([lat, lon], 16); // 地図を検索結果に移動
-          updateMarkerAndForm(lat, lon); // マーカーとフォームを更新
+          map.setView([lat, lon], 16);
+          updateMarkerAndForm(lat, lon);
         } else {
           alert('住所が見つかりませんでした。');
         }
